@@ -1,0 +1,392 @@
+app-id: io.github.Schildkroet.KiCadWayland
+runtime: org.freedesktop.Sdk
+runtime-version: '24.08'
+sdk: org.freedesktop.Sdk
+command: kicad-startup
+finish-args:
+  - --device=dri
+  - --filesystem=home
+  - --share=ipc
+  - --share=network
+  - --socket=fallback-x11
+  - --socket=wayland
+  - --env=TMPDIR=/var/tmp
+
+add-extensions:
+  org.kicad.KiCad.Library:
+    version: stable
+    directory: extensions/Library
+    autodelete: true
+    no-autodownload: false
+    subdirectories: true
+    merge-dirs: template;symbols;footprints;3dmodels
+  org.kicad.KiCad.ODBCDriver:
+    version: stable
+    directory: extensions/ODBCDriver
+    autodelete: true
+    no-autodownload: true
+    subdirectories: true
+    add-ld-path: lib
+    merge-dirs: lib;template
+
+cleanup:
+  - /lib/cmake
+  - /lib/pkgconfig
+  - /lib/wx
+  - /lib64
+  - /share/aclocal
+  - /share/bakefile
+  - '*.la'
+  - '*.a'
+
+modules:
+  - shared-modules/glu/glu-9.json
+  - shared-modules/glew/glew.json
+  - shared-modules/libsecret/libsecret.json
+
+  - name: glm
+    buildsystem: simple
+    build-commands:
+      - cp -r glm /app/include
+    cleanup:
+      - /include
+    sources:
+      - type: git
+        url: https://github.com/g-truc/glm
+        tag: 1.0.1
+        commit: 0af55ccecd98d4e5a8d1fad7de25ba429d60e863
+        x-checker-data:
+          type: git
+          tag-pattern: ^([\d\.]+)$
+
+  - name: libXmu
+    cleanup:
+      - /include
+      - /share/doc
+    sources:
+      - type: git
+        url: https://gitlab.freedesktop.org/xorg/lib/libxmu.git
+        tag: libXmu-1.2.1
+        commit: 792f80402ee06ce69bca3a8f2a84295999c3a170
+        x-checker-data:
+          type: git
+          tag-pattern: ^libXmu-([\d\.]+)$
+
+  - name: OCCT
+    buildsystem: cmake-ninja
+    cleanup:
+      - /bin
+      - /include
+      - /share/doc
+    config-opts:
+      - -DCMAKE_BUILD_TYPE=RelWithDebInfo
+      - -DBUILD_LIBRARY_TYPE=Shared
+      - -DBUILD_Inspector=OFF
+      - -DBUILD_DOC_Overview=OFF
+      - -DBUILD_MODULE_ApplicationFramework=ON
+      - -DBUILD_MODULE_DataExchange=ON
+      - -DBUILD_MODULE_Draw=OFF
+      - -DBUILD_MODULE_FoundationClasses=ON
+      - -DBUILD_MODULE_ModelingAlgorithms=ON
+      - -DBUILD_MODULE_ModelingData=ON
+      - -DBUILD_MODULE_Visualization=ON
+      - -DUSE_VTK=OFF
+      - -DUSE_TBB=OFF
+      - -DINSTALL_FREETYPE=OFF
+      - -DINSTALL_SAMPLES=OFF
+      - -DINSTALL_TEST_CASES=OFF
+    sources:
+      - type: git
+        commit: 858dd02fed80c8ca68cf1d70a6e03ecf97f849ca
+        url: https://github.com/Open-Cascade-SAS/OCCT
+        tag: V7_9_0
+        x-checker-data:
+          type: git
+          tag-pattern: ^V([\d_]+)$
+
+  - name: boost
+    buildsystem: simple
+    build-commands:
+      - ./bootstrap.sh --prefix=/app --with-libraries=locale,test
+      - ./b2 -j $FLATPAK_BUILDER_N_JOBS install
+    cleanup:
+      - /include
+    sources:
+      - type: archive
+        url: https://archives.boost.io/release/1.88.0/source/boost_1_88_0.tar.gz
+        sha256: 3621533e820dcab1e8012afd583c0c73cf0f77694952b81352bf38c1488f9cb4
+        x-checker-data:
+          type: html
+          url: https://www.boost.org/feed/downloads.rss
+          url-template: https://archives.boost.io/release/$version/source/boost_${version0}_${version1}_${version2}.tar.gz
+          version-pattern: <title>Version (\d+\.?\d+\.\d+)(?!\sbeta)|</title>$
+
+  - name: wxWidgets
+    cleanup:
+      - /bin
+      - /include
+    config-opts:
+      - --with-opengl
+    sources:
+      - type: git
+        commit: 8aef5f40b93958719771331ca03866b7b6fff6bf
+        tag: v3.2.8
+        url: https://github.com/wxWidgets/wxWidgets
+        x-checker-data:
+          is-important: true
+          type: git
+          tag-pattern: ^v([\d\.]+)$
+
+  - python3-requests.yml
+  - python3-wxPython.yml
+
+  - name: swig
+    buildsystem: autotools
+    cleanup:
+      - /bin
+      - /share
+    sources:
+      - type: archive
+        url: https://sourceforge.net/projects/swig/files/swig/swig-4.3.1/swig-4.3.1.tar.gz
+        sha256: 44fc829f70f1e17d635a2b4d69acab38896699ecc24aa023e516e0eabbec61b8
+        x-checker-data:
+          type: html
+          url: https://www.swig.org/download.html
+          version-pattern: The latest release is <a href=".+">swig-([\d\.]+)</a>
+          url-template: https://sourceforge.net/projects/swig/files/swig/swig-$version/swig-$version.tar.gz
+
+  - name: ngspice
+    cleanup:
+      - /bin
+      - /include
+      - /share/man
+    config-opts:
+      - --disable-silent-rules
+      - --enable-xspice
+      - --enable-cider
+      - --enable-openmp
+      - --with-ngshared
+    rm-configure: true
+    sources:
+      - type: archive
+        url: https://downloads.sourceforge.net/project/ngspice/ng-spice-rework/44.2/ngspice-44.2.tar.gz
+        sha256: e7dadfb7bd5474fd22409c1e5a67acdec19f77e597df68e17c5549bc1390d7fd
+        x-checker-data:
+          is-important: true
+          type: html
+          url: https://ngspice.sourceforge.io/download.html
+          url-template: https://downloads.sourceforge.net/project/ngspice/ng-spice-rework/$version/ngspice-$version.tar.gz
+          version-pattern: <strong>ngspice-([\d.]+)</strong>
+      - type: script
+        commands:
+          - cp -p /usr/share/automake-*/config.{sub,guess} .
+          - autoconf -f -B build/autoconf_prepend-include
+
+  - name: unixodbc
+    cleanup:
+      - /share/man
+    sources:
+      - type: git
+        url: https://github.com/lurcher/unixODBC.git
+        tag: 2.3.12
+        commit: c335dbf3fa25b524e935e98cf26b96a2e13f5c81
+        x-checker-data:
+          type: git
+          tag-pattern: ^([\d\.]+)$
+      - type: script
+        commands:
+          - autoreconf -fi
+
+  - name: libgit2
+    buildsystem: cmake-ninja
+    cleanup:
+      - /bin
+      - /include
+      - /lib/pkgconfig
+    config-opts:
+      - -DCMAKE_BUILD_TYPE=RelWithDebInfo
+    sources:
+      - type: git
+        commit: 338e6fb681369ff0537719095e22ce9dc602dbf0
+        tag: v1.9.0
+        url: https://github.com/libgit2/libgit2
+        x-checker-data:
+          type: git
+          tag-pattern: ^(v[\d\.]+)$
+
+  - name: protobuf
+    buildsystem: cmake-ninja
+    config-opts:
+      - -Dprotobuf_BUILD_SHARED_LIBS=ON
+      - -Dprotobuf_BUILD_TESTS=OFF
+      - -Dprotobuf_ALLOW_CCACHE=ON
+      - -Dprotobuf_LOCAL_DEPENDENCIES_ONLY=ON
+    cleanup:
+      - /bin
+      - /include
+    sources:
+      - type: git
+        url: https://github.com/protocolbuffers/protobuf.git
+        tag: v30.2
+        commit: 43e1626812c1b543e56a7bec59dc09eb18248bd2
+        x-checker-data:
+          type: git
+          tag-pattern: ^v([\d.]+)$
+
+  - name: nng
+    buildsystem: cmake-ninja
+    config-opts:
+      - -DCMAKE_BUILD_TYPE=RelWithDebInfo
+      - -DBUILD_SHARED_LIBS=ON
+    cleanup:
+      - /bin
+      - /include
+    sources:
+      - type: git
+        url: https://github.com/nanomsg/nng.git
+        tag: v1.10.1
+        commit: d98d3ec1e0c3230a6f9e60616180ac66f5791a5b
+        x-checker-data:
+          type: git
+          tag-pattern: ^v([\d.]+)$
+
+  - python3-pytest.yml
+
+  - name: kicad
+    builddir: true
+    buildsystem: cmake-ninja
+    config-opts:
+      - -DCMAKE_BUILD_TYPE=RelWithDebInfo
+      - -DCMAKE_CTEST_ARGUMENTS="--output-on-failure"
+      - -DGLEW_INCLUDE_DIR=/app/include/GL
+      - -DOCC_INCLUDE_DIR=/app/include/opencascade
+      - -DOPENGL_glu_LIBRARY=/app/lib/libGLU.so
+      - -DKICAD_BUILD_FLATPAK=ON
+      - -DKICAD_BUILD_I18N=ON
+      - -DKICAD_USE_EGL=ON
+      - -DKICAD_USE_BUNDLED_GLEW=ON
+      - -DKICAD_WAYLAND=ON
+      - -DKICAD_LIBRARY_DATA=/app/extensions/Library
+    post-install:
+      - install ../../flatpak-extra/kicad-startup /app/bin/kicad-startup
+      - install ../../flatpak-extra/eeschema-startup /app/bin/eeschema-startup
+      - install ../../flatpak-extra/pcbnew-startup /app/bin/pcbnew-startup
+      - install ../../flatpak-extra/python /app/bin/python
+      - install ../../flatpak-extra/pip3 /app/bin/pip3.10
+      - ln -s /app/bin/pip3.10 /app/bin/pip3
+      - ln -s /app/bin/pip3 /app/bin/pip
+      - install -d /app/extensions/ODBCDriver
+      - for f in $FLATPAK_DEST/share/applications/*.desktop; do mv "$f" "$(echo "$f" | sed s/org.kicad.KiCad/io.github.Schildkroet.KiCadWayland/)"; done
+      - for f in $(find $FLATPAK_DEST/share/icons/hicolor -iname "org.kicad.KiCad*png"); do mv "$f" "$(echo "$f" | sed s/org.kicad.KiCad/io.github.Schildkroet.KiCadWayland/)"; done
+      # Alter the desktop files for kicad, eeschema, and pcbnew to use the
+      # wrapper scripts installing/uninstalling the ODBC drivers before
+      # launching the apps.
+      - >
+        for f in $FLATPAK_DEST/share/applications/*.desktop; do
+          desktop_name="$(basename $f)"
+          if [ "$desktop_name" = "io.github.Schildkroet.KiCadWayland.desktop" ]; then
+            desktop-file-edit \
+              --set-key=Exec \
+              --set-value="kicad-startup %f" \
+              "$f";
+            desktop-file-edit \
+              --set-key=Name \
+              --set-value="KiCad-Wayland" \
+              "$f";
+            desktop-file-edit \
+              --set-icon=io.github.Schildkroet.KiCadWayland \
+              "$f";
+          else
+            if [[ "$desktop_name" =~ ^io\.github\.Schildkroet\.KiCadWayland\.(eeschema|pcbnew)\.desktop$
+        ]]; then
+              desktop-file-edit \
+                --set-key=Exec \
+                --set-value="${BASH_REMATCH[1]}-startup %f" \
+                "$f";
+              desktop-file-edit \
+                --set-icon="io.github.Schildkroet.KiCadWayland.${BASH_REMATCH[1]}" \
+              "$f";
+            fi;
+          fi;
+        done;
+        unset desktop_name
+      # TODO (post-install script): Re-add <kudos> tag to metainfo.xml for UserDocs.
+    # Disable tests (see https://github.com/flatpak/flatpak/issues/6137)
+    #run-tests: true
+    subdir: kicad-git
+    sources:
+      - type: git
+        dest: kicad-git
+        url: https://gitlab.com/kicad/code/kicad.git
+        commit: 5526fba124bcbb1bdf626614248b5a73aa5b5123
+        tag: 9.0.2
+        x-checker-data:
+          is-main-source: true
+          type: git
+          tag-pattern: ^([\d\.]+)$
+          versions:
+            <: 9.99.0
+      - type: script
+        dest: flatpak-extra
+        dest-filename: pip3
+        commands:
+          - export PYTHONUSERBASE="$XDG_DATA_HOME/python"
+          - export PATH="$XDG_DATA_HOME/python/bin":$PATH
+          - exec /usr/bin/pip3 "$@"
+      - type: script
+        dest: flatpak-extra
+        dest-filename: python
+        commands:
+          - export PYTHONUSERBASE="$XDG_DATA_HOME/python"
+          - export PATH="$XDG_DATA_HOME/python/bin":$PATH
+          - exec /usr/bin/python "$@"
+      - type: script
+        dest: flatpak-extra
+        dest-filename: kicad-startup
+        commands:
+          - mkdir -p ${XDG_CONFIG_HOME}/unixodbc
+          - export ODBCSYSINI=${XDG_CONFIG_HOME}/unixodbc
+          # Remove config file, and recreate it from all available templates.
+          # This handles uninstallation of ODBCDriver extensions.
+          - rm -f ${ODBCSYSINI}/odbcinst.ini
+          # Install available ODBC drivers
+          - >
+            for template in /app/extensions/ODBCDriver/template/*.ini; do
+              test -f "$template" || continue;
+              odbcinst -i -d -f "$template" >/dev/null;
+            done
+          - exec /app/bin/kicad "$@"
+      - type: script
+        dest: flatpak-extra
+        dest-filename: eeschema-startup
+        commands:
+          - mkdir -p ${XDG_CONFIG_HOME}/unixodbc
+          - export ODBCSYSINI=${XDG_CONFIG_HOME}/unixodbc
+          # Remove config file, and recreate it from all available templates.
+          # This handles uninstallation of ODBCDriver extensions.
+          - rm -f ${ODBCSYSINI}/odbcinst.ini
+          # Install available ODBC drivers
+          - >
+            for template in /app/extensions/ODBCDriver/template/*.ini; do
+              test -f "$template" || continue;
+              odbcinst -i -d -f "$template" >/dev/null;
+            done
+          - exec /app/bin/eeschema "$@"
+      - type: script
+        dest: flatpak-extra
+        dest-filename: pcbnew-startup
+        commands:
+          - mkdir -p ${XDG_CONFIG_HOME}/unixodbc
+          - export ODBCSYSINI=${XDG_CONFIG_HOME}/unixodbc
+          # Remove config file, and recreate it from all available templates.
+          # This handles uninstallation of ODBCDriver extensions.
+          - rm -f ${ODBCSYSINI}/odbcinst.ini
+          # Install available ODBC drivers
+          - >
+            for template in /app/extensions/ODBCDriver/template/*.ini; do
+              test -f "$template" || continue;
+              odbcinst -i -d -f "$template" >/dev/null;
+            done
+          - exec /app/bin/pcbnew "$@"
+
+  - kicad-doc.yml

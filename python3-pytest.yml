@@ -1,0 +1,85 @@
+name: python3-pytest
+buildsystem: simple
+build-commands:
+  - pip3 install --verbose --exists-action=i --no-index --find-links="file://${PWD}"
+    --prefix=${FLATPAK_DEST} "CairoSVG" "pytest" --no-build-isolation
+cleanup:
+  - /bin
+  - /lib
+sources:
+  - type: file
+    url: https://files.pythonhosted.org/packages/2c/e1/e6716421ea10d38022b952c159d5161ca1193197fb744506875fbb87ea7b/iniconfig-2.1.0-py3-none-any.whl
+    sha256: 9deba5723312380e77435581c6bf4935c94cbfab9b1ed33ef8d238ea168eb760
+    x-checker-data:
+      name: iniconfig
+      packagetype: bdist_wheel
+      type: pypi
+  - type: file
+    url: https://files.pythonhosted.org/packages/88/5f/e351af9a41f866ac3f1fac4ca0613908d9a41741cfcf2228f4ad853b697d/pluggy-1.5.0-py3-none-any.whl
+    sha256: 44e1ad92c8ca002de6377e165f3e0f1be63266ab4d554740532335b9d75ea669
+    x-checker-data:
+      name: pluggy
+      packagetype: bdist_wheel
+      type: pypi
+  - type: file
+    url: https://files.pythonhosted.org/packages/30/3d/64ad57c803f1fa1e963a7946b6e0fea4a70df53c1a7fed304586539c2bac/pytest-8.3.5-py3-none-any.whl
+    sha256: c69214aa47deac29fad6c2a4f590b9c4a9fdb16a403176fe154b79c0b4d4d820
+    x-checker-data:
+      name: pytest
+      packagetype: bdist_wheel
+      type: pypi
+  - type: file
+    url: https://files.pythonhosted.org/packages/fc/97/c783634659c2920c3fc70419e3af40972dbaf758daa229a7d6ea6135c90d/cffi-1.17.1.tar.gz
+    sha256: 1c39c6016c32bc48dd54561950ebd6836e1670f2ae46128f67cf49e789c52824
+    x-checker-data:
+      name: cffi
+      type: pypi
+  - type: file
+    url: https://files.pythonhosted.org/packages/93/d8/ba13451aa6b745c49536e87b6bf8f629b950e84bd0e8308f7dc6883b67e2/cairocffi-1.7.1-py3-none-any.whl
+    sha256: 9803a0e11f6c962f3b0ae2ec8ba6ae45e957a146a004697a1ac1bbf16b073b3f
+    x-checker-data:
+      name: cairocffi
+      packagetype: bdist_wheel
+      type: pypi
+  - type: file
+    url: https://files.pythonhosted.org/packages/01/a5/1866b42151f50453f1a0d28fc4c39f5be5f412a2e914f33449c42daafdf1/CairoSVG-2.7.1-py3-none-any.whl
+    sha256: 8a5222d4e6c3f86f1f7046b63246877a63b49923a1cd202184c3a634ef546b3b
+    x-checker-data:
+      name: CairoSVG
+      packagetype: bdist_wheel
+      type: pypi
+  - type: file
+    url: https://files.pythonhosted.org/packages/0f/e7/aa315e6a749d9b96c2504a1ba0ba031ba2d0517e972ce22682e3fccecb09/cssselect2-0.8.0-py3-none-any.whl
+    sha256: 46fc70ebc41ced7a32cd42d58b1884d72ade23d21e5a4eaaf022401c13f0e76e
+    x-checker-data:
+      name: cssselect2
+      packagetype: bdist_wheel
+      type: pypi
+  - type: file
+    url: https://files.pythonhosted.org/packages/07/6c/aa3f2f849e01cb6a001cd8554a88d4c77c5c1a31c95bdf1cf9301e6d9ef4/defusedxml-0.7.1-py2.py3-none-any.whl
+    sha256: a352e7e428770286cc899e2542b6cdaedb2b4953ff269a210103ec58f6198a61
+    x-checker-data:
+      name: defusedxml
+      packagetype: bdist_wheel
+      type: pypi
+  - type: file
+    url: https://files.pythonhosted.org/packages/13/a3/a812df4e2dd5696d1f351d58b8fe16a405b234ad2886a0dab9183fb78109/pycparser-2.22-py3-none-any.whl
+    sha256: c3702b6d3dd8c7abc1afa565d7e63d53a1d0bd86cdc24edd75470f4de499cfcc
+    x-checker-data:
+      name: pycparser
+      packagetype: bdist_wheel
+      type: pypi
+  - type: file
+    url: https://files.pythonhosted.org/packages/e6/34/ebdc18bae6aa14fbee1a08b63c015c72b64868ff7dae68808ab500c492e2/tinycss2-1.4.0-py3-none-any.whl
+    sha256: 3a49cf47b7675da0b15d0c6e1df8df4ebd96e9394bb905a5775adb0d884c5289
+    x-checker-data:
+      name: tinycss2
+      packagetype: bdist_wheel
+      type: pypi
+  - type: file
+    url: https://files.pythonhosted.org/packages/f4/24/2a3e3df732393fed8b3ebf2ec078f05546de641fe1b667ee316ec1dcf3b7/webencodings-0.5.1-py2.py3-none-any.whl
+    sha256: a0af1213f3c2226497a97e2b3aa01a7e4bee4f403f95be16fc9acd2947514a78
+    x-checker-data:
+      name: webencodings
+      packagetype: bdist_wheel
+      type: pypi
